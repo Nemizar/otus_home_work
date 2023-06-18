@@ -2,11 +2,81 @@ package hw02unpackstring
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+	"unicode"
 )
 
 var ErrInvalidString = errors.New("invalid string")
 
-func Unpack(_ string) (string, error) {
-	// Place your code here.
-	return "", nil
+func Unpack(s string) (string, error) {
+	runes := []rune(s)
+
+	if err := validate(runes); err != nil {
+		return "", fmt.Errorf("validate error %w", err)
+	}
+
+	return unpack(runes), nil
+}
+
+func validate(runes []rune) error {
+	if len(runes) == 0 {
+		return nil
+	}
+
+	if unicode.IsDigit(runes[0]) {
+		return ErrInvalidString
+	}
+
+	str := []byte(string(runes))
+
+	matched, err := regexp.Match(`\d{2,}`, str)
+	if err != nil {
+		return err
+	}
+
+	if matched {
+		return ErrInvalidString
+	}
+
+	matched, err = regexp.Match(`\\\w`, str)
+	if err != nil {
+		return err
+	}
+
+	if matched {
+		return ErrInvalidString
+	}
+
+	return nil
+}
+
+func unpack(runes []rune) string {
+	if len(runes) == 0 {
+		return ""
+	}
+
+	b := strings.Builder{}
+
+	for i, r := range runes {
+		current := string(r)
+
+		count := 1
+		if i+1 < len(runes) {
+			tmp, err := strconv.Atoi(string(runes[i+1]))
+			if err == nil {
+				count = tmp
+			}
+		}
+
+		if unicode.IsDigit(r) {
+			continue
+		}
+
+		b.WriteString(strings.Repeat(current, count))
+	}
+
+	return b.String()
 }
