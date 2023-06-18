@@ -14,6 +14,10 @@ var ErrInvalidString = errors.New("invalid string")
 func Unpack(s string) (string, error) {
 	runes := []rune(s)
 
+	if len(runes) == 0 {
+		return "", nil
+	}
+
 	if err := validate(runes); err != nil {
 		return "", fmt.Errorf("validate error %w", err)
 	}
@@ -22,10 +26,6 @@ func Unpack(s string) (string, error) {
 }
 
 func validate(runes []rune) error {
-	if len(runes) == 0 {
-		return nil
-	}
-
 	if unicode.IsDigit(runes[0]) {
 		return ErrInvalidString
 	}
@@ -41,23 +41,10 @@ func validate(runes []rune) error {
 		return ErrInvalidString
 	}
 
-	matched, err = regexp.Match(`\\\w`, str)
-	if err != nil {
-		return err
-	}
-
-	if matched {
-		return ErrInvalidString
-	}
-
 	return nil
 }
 
 func unpack(runes []rune) string {
-	if len(runes) == 0 {
-		return ""
-	}
-
 	b := strings.Builder{}
 
 	for i, r := range runes {
