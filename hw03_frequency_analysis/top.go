@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const resultLength = 10
+
 type Pair struct {
 	Key   string
 	Value int
@@ -42,23 +44,23 @@ func Top10(str string) []string {
 
 	sLen := len(scores)
 
-	pairList := make(PairList, sLen)
+	pairList := make(PairList, 0, sLen)
 
-	pairListIdx := 0
 	for k, v := range scores {
-		pairList[pairListIdx] = Pair{k, v}
-		pairListIdx++
+		pairList = append(pairList, Pair{k, v})
 	}
 
 	sort.Sort(pairList)
 
-	res := make([]string, 0)
+	res := make([]string, 0, resultLength)
+
 	for _, pair := range pairList {
+		if len(res) >= resultLength {
+			break
+		}
+
 		res = append(res, pair.Key)
 	}
 
-	if sLen > 10 {
-		return res[:10]
-	}
 	return res
 }
