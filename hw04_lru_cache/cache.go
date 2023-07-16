@@ -26,7 +26,7 @@ func (c *lruCache) Set(key Key, value any) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if el, ok := c.items[key]; ok == true {
+	if el, ok := c.items[key]; ok {
 		c.queue.MoveToFront(el)
 		el.Value.(*cacheItem).value = value
 
@@ -53,7 +53,7 @@ func (c *lruCache) Get(key Key) (any, bool) {
 	defer c.mu.Unlock()
 
 	el, ok := c.items[key]
-	if ok == false {
+	if !ok {
 		return nil, false
 	}
 
