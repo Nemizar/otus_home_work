@@ -34,7 +34,7 @@ func (c *lruCache) Set(key Key, value any) bool {
 	}
 
 	if c.queue.Len() == c.capacity {
-		c.Clear()
+		c.purge()
 	}
 
 	item := &cacheItem{
@@ -63,6 +63,11 @@ func (c *lruCache) Get(key Key) (any, bool) {
 }
 
 func (c *lruCache) Clear() {
+	c.queue = NewList()
+	c.items = make(map[Key]*ListItem, c.capacity)
+}
+
+func (c *lruCache) purge() {
 	if el := c.queue.Back(); el != nil {
 		c.queue.Remove(c.queue.Back())
 
