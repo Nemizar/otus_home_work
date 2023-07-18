@@ -91,7 +91,7 @@ func (l *list) Remove(i *ListItem) {
 
 	if i.Next == nil {
 		l.last = i.Prev
-		l.first.Next = nil
+		l.last.Next = nil
 
 		return
 	}

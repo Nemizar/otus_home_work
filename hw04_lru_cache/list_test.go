@@ -32,7 +32,7 @@ func TestList(t *testing.T) {
 
 		l.Remove(l.Back()) // [20, 30]
 		require.Equal(t, 2, l.Len())
-		require.Nil(t, l.Front().Next)
+		require.Nil(t, l.Back().Next)
 	})
 
 	t.Run("complex", func(t *testing.T) {
