@@ -113,4 +113,12 @@ func TestRun(t *testing.T) {
 		err := Run(tasks, workersCount, maxErrorsCount)
 		require.Truef(t, errors.Is(err, ErrErrorsGoroutinesNumber), "actual err - %v", err)
 	})
+
+	t.Run("tasks with 0 workers", func(t *testing.T) {
+		workersCount := 1
+		maxErrorsCount := 2
+
+		err := Run(nil, workersCount, maxErrorsCount)
+		require.NoError(t, err)
+	})
 }
