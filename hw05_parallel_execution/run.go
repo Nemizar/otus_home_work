@@ -46,6 +46,12 @@ func Run(tasks []Task, n, m int) error {
 		go func() {
 			defer wg.Done()
 			for task := range ch {
+				if task == nil {
+					atomic.AddInt32(&errCounter, 1)
+
+					continue
+				}
+
 				if err := task(); err != nil {
 					atomic.AddInt32(&errCounter, 1)
 				}
