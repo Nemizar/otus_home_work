@@ -9,14 +9,14 @@ type (
 type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	out := stageDone(in, done)
-
 	if in == nil || len(stages) == 0 {
 		ch := make(Bi)
 		close(ch)
 
 		return ch
 	}
+
+	out := stageDone(in, done)
 
 	for _, s := range stages {
 		out = s(stageDone(out, done))
