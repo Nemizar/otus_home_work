@@ -13,7 +13,6 @@ var (
 	ErrUnsupportedFile       = errors.New("unsupported file")
 	ErrOffsetExceedsFileSize = errors.New("offset exceeds file size")
 	ErrFileNotExists         = errors.New("file not exists")
-	ErrInvalidFileSize       = errors.New("invalid file size")
 	ErrInvalidLimit          = errors.New("limit cannot be a negative number")
 	ErrInvalidOffset         = errors.New("offset cannot be a negative number")
 )
@@ -27,7 +26,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return ErrInvalidOffset
 	}
 
-	from, err := open(fromPath)
+	from, err := os.OpenFile(fromPath, os.O_RDONLY, 0o644)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return ErrFileNotExists
@@ -43,8 +42,14 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		}
 	}(from)
 
-	fSize, err := getFileSize(from)
+	fi, err := os.Stat(from.Name())
 	if err != nil {
+		return fmt.Errorf("stat file %s: %w", from.Name(), err)
+	}
+
+	fSize := fi.Size()
+
+	if fi.Size() == 0 {
 		return ErrUnsupportedFile
 	}
 
@@ -59,7 +64,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return fmt.Errorf("seek %w", err)
 	}
 
-	to, err := newFile(toPath)
+	to, err := os.Create(toPath)
 	if err != nil {
 		return fmt.Errorf("create file %s: %w", toPath, err)
 	}
@@ -77,34 +82,15 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 
 	_, err = io.CopyN(to, barReader, limit)
 	if err != nil {
+		err := os.Remove(to.Name())
+		if err != nil {
+			return fmt.Errorf("delete file %w", err)
+		}
+
 		return fmt.Errorf("copy %w", err)
 	}
 
 	return nil
-}
-
-func open(path string) (*os.File, error) {
-	var file *os.File
-	file, err := os.OpenFile(path, os.O_RDONLY, 0o644)
-	if err != nil {
-		return nil, err
-	}
-
-	return file, nil
-}
-
-func getFileSize(file *os.File) (int64, error) {
-	fi, err := os.Stat(file.Name())
-	if err != nil {
-		return 0, fmt.Errorf("stat file %s: %w", file.Name(), err)
-	}
-
-	size := fi.Size()
-	if fi.Size() == 0 {
-		return 0, ErrInvalidFileSize
-	}
-
-	return size, nil
 }
 
 func getLimit(limit int64, fSize int64, offset int64) int64 {
@@ -113,14 +99,6 @@ func getLimit(limit int64, fSize int64, offset int64) int64 {
 	} else if fSize < offset+limit {
 		limit = fSize - offset
 	}
+
 	return limit
-}
-
-func newFile(path string) (*os.File, error) {
-	file, err := os.Create(path)
-	if err != nil {
-		return nil, fmt.Errorf("create file %s: %w", path, err)
-	}
-
-	return file, nil
 }
