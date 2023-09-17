@@ -33,6 +33,14 @@ func ReadDir(dir string) (Environment, error) {
 	res := make(Environment)
 
 	for _, f := range dirEntries {
+		if f.IsDir() {
+			continue
+		}
+
+		if strings.Contains(f.Name(), "=") {
+			return nil, fmt.Errorf("unsuported file name %s", f.Name())
+		}
+
 		str, needRemove, err := readFile(f)
 		if err != nil {
 			return nil, fmt.Errorf("read file %w", err)
@@ -50,10 +58,6 @@ func ReadDir(dir string) (Environment, error) {
 }
 
 func readFile(dirEntry os.DirEntry) (string, bool, error) {
-	if strings.Contains(dirEntry.Name(), "=") {
-		return "", true, fmt.Errorf("unsuported file name %s", dirEntry.Name())
-	}
-
 	envFile, err := os.Open(dirEntry.Name())
 	if err != nil {
 		log.Fatalf("open file %s: %v", dirEntry.Name(), err)
